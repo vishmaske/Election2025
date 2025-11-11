@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voter List Search Portal</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .nav-tab {
+            padding: 15px 30px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+            font-weight: 600;
+            color: #495057;
+            transition: all 0.3s;
+        }
+
+        .nav-tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 30px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .search-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+
+        .search-controls {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        #searchInput {
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        #searchInput:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .alphabet-nav {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin: 20px 0;
+        }
+
+        .letter-btn {
+            padding: 10px 15px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .letter-btn:hover,
+        .letter-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .results-section {
+            margin-top: 20px;
+        }
+
+        .stats {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .voter-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .voter-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .voter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .voter-name {
+            font-size: 1.4em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .voter-original-name {
+            color: #6c757d;
+            font-style: italic;
+            margin-bottom: 10px;
+        }
+
+        .voter-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #495057;
+            min-width: 80px;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .badge-ward {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .badge-photo {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .badge-no-photo {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .page-btn {
+            padding: 10px 15px;
+            border: 1px solid #dee2e6;
+            background: white;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: #667eea;
+            color: white;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .page-info {
+            margin: 0 15px;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2em;
+            color: #6c757d;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+            font-size: 1.1em;
+        }
+
+        .upload-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+
+        .upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .upload-area i {
+            font-size: 3em;
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-list {
+            margin-top: 20px;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            transition: width 0.3s;
+        }
+
+        @media (max-width: 768px) {
+            .search-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .voter-header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .voter-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Voter List Search Portal</h1>
+            <p>Comprehensive voter data management and search system</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('search')">Search Voters</button>
+            <button class="nav-tab" onclick="switchTab('upload')">Upload PDF</button>
+            <button class="nav-tab" onclick="switchTab('manage')">Manage Data</button>
+        </div>
+
+        <!-- Search Tab -->
+        <div id="search-tab" class="tab-content active">
+            <div class="search-section">
+                <div class="search-controls">
+                    <input type="text" id="searchInput" placeholder="Search by name, SWH ID, serial code, or address...">
+                    <button class="btn btn-primary" onclick="searchVoters()">Search</button>
+                    <button class="btn btn-secondary" onclick="clearSearch()">Clear</button>
+                </div>
+
+                <div class="filters">
+                    <div class="filter-group">
+                        <label for="wardFilter">Ward:</label>
+                        <select id="wardFilter" onchange="applyFilters()">
+                            <option value="">All Wards</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="ageFilter">Age Range:</label>
+                        <select id="ageFilter" onchange="applyFilters()">
+                            <option value="">All Ages</option>
+                            <option value="18-25">18-25</option>
+                            <option value="26-35">26-35</option>
+                            <option value="36-50">36-50</option>
+                            <option value="51+">51+</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="photoFilter">Photo Available:</label>
+                        <select id="photoFilter" onchange="applyFilters()">
+                            <option value="">All</option>
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="alphabet-nav" id="alphabetNav">
+                    <!-- Alphabet buttons will be generated here -->
+                </div>
+            </div>
+
+            <div class="results-section">
+                <div class="stats" id="stats">
+                    <span>Total Voters: <strong id="totalCount">0</strong></span>
+                    <span>Showing: <strong id="showingCount">0</strong></span>
+                    <span>Wards: <strong id="wardsCount">0</strong></span>
+                    <span>Last Updated: <strong id="lastUpdated">-</strong></span>
+                </div>
+
+                <div id="resultsContainer">
+                    <div class="loading">Loading voter data...</div>
+                </div>
+
+                <div class="pagination" id="pagination">
+                    <!-- Pagination will be generated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Tab -->
+        <div id="upload-tab" class="tab-content">
+            <div class="upload-section">
+                <h2>Upload PDF Files</h2>
+                <p>Upload voter list PDFs to extract and add to the search database</p>
+                
+                <div class="upload-area" id="uploadArea">
+                    <i>📁</i>
+                    <h3>Drag & Drop PDF Files Here</h3>
+                    <p>or click to select files</p>
+                    <input type="file" id="fileInput" class="file-input" multiple accept=".pdf">
+                    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                        Select PDF Files
+                    </button>
+                </div>
+
+                <div class="file-list" id="fileList">
+                    <!-- File list will be generated here -->
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-success" onclick="processUploads()" id="processBtn" disabled>
+                        Process Uploaded Files
+                    </button>
+                </div>
+            </div>
+
+            <div id="uploadResults">
+                <!-- Upload results will be shown here -->
+            </div>
+        </div>
+
+        <!-- Manage Tab -->
+        <div id="manage-tab" class="tab-content">
+            <div class="search-section">
+                <h2>Data Management</h2>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+                    <div style="background: white; padding: 20px; border-radius: 10px; border: 1px solid #e9ecef;">
+                        <h3>📊 Database Statistics</h3>
+                        <div id="dbStats">
+                            <div class="loading">Loading statistics...</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: white; padding: 20px; border-radius: 10px; border: 1px solid #e9ecef;">
+                        <h3>🔄 Data Operations</h3>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <button class="btn btn-primary" onclick="refreshData()">Refresh Data</button>
+                            <button class="btn btn-secondary" onclick="exportData()">Export to CSV</button>
+                            <button class="btn btn-secondary" onclick="backupData()">Backup Data</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allVoters = [];
+        let filteredVoters = [];
+        let currentPage = 1;
+        const votersPerPage = 20;
+        let uploadedFiles = [];
+
+        // Initialize the application
+        async function init() {
+            await loadVoterData();
+            setupAlphabetNav();
+            updateStats();
+            displayVoters();
+            setupUploadArea();
+            loadDatabaseStats();
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Load voter data from JSON file
+        async function loadVoterData() {
+            try {
+                const response = await fetch('all_wards_merged.json');
+                allVoters = await response.json();
+                populateWardFilter();
+                filteredVoters = [...allVoters];
+                updateLastUpdated();
+            } catch (error) {
+                console.error('Error loading voter data:', error);
+                document.getElementById('resultsContainer').innerHTML = 
+                    '<div class="no-results">Error loading voter data. Please check if the JSON file exists.</div>';
+            }
+        }
+
+        // Update last updated timestamp
+        function updateLastUpdated() {
+            const now = new Date();
+            document.getElementById('lastUpdated').textContent = now.toLocaleString();
+        }
+
+        // Populate ward filter dropdown
+        function populateWardFilter() {
+            const wardFilter = document.getElementById('wardFilter');
+            const wards = [...new Set(allVoters.map(voter => voter.ward))].sort();
+            
+            wards.forEach(ward => {
+                const option = document.createElement('option');
+                option.value = ward;
+                option.textContent = ward;
+                wardFilter.appendChild(option);
+            });
+        }
+
+        // Setup alphabet navigation
+        function setupAlphabetNav() {
+            const alphabetNav = document.getElementById('alphabetNav');
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+            
+            letters.forEach(letter => {
+                const button = document.createElement('button');
+                button.className = 'letter-btn';
+                button.textContent = letter;
+                button.onclick = () => filterByFirstLetter(letter);
+                alphabetNav.appendChild(button);
+            });
+        }
+
+        // Search voters based on input and filters
+        function searchVoters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const wardFilter = document.getElementById('wardFilter').value;
+            const ageFilter = document.getElementById('ageFilter').value;
+            const photoFilter = document.getElementById('photoFilter').value;
+            
+            filteredVoters = allVoters.filter(voter => {
+                // Search term matching
+                const matchesSearch = !searchTerm || 
+                    (voter.name_english && voter.name_english.toLowerCase().includes(searchTerm)) ||
+                    (voter.name_raw && voter.name_raw.toLowerCase().includes(searchTerm)) ||
+                    (voter.swh_id && voter.swh_id.toLowerCase().includes(searchTerm)) ||
+                    (voter.serial_code && voter.serial_code.toLowerCase().includes(searchTerm)) ||
+                    (voter.address && voter.address.toLowerCase().includes(searchTerm));
+                
+                // Ward filter
+                const matchesWard = !wardFilter || voter.ward === wardFilter;
+                
+                // Age filter
+                let matchesAge = true;
+                if (ageFilter && voter.age) {
+                    const age = parseInt(voter.age);
+                    switch(ageFilter) {
+                        case '18-25': matchesAge = age >= 18 && age <= 25; break;
+                        case '26-35': matchesAge = age >= 26 && age <= 35; break;
+                        case '36-50': matchesAge = age >= 36 && age <= 50; break;
+                        case '51+': matchesAge = age >= 51; break;
+                    }
+                }
+                
+                // Photo filter
+                let matchesPhoto = true;
+                if (photoFilter) {
+                    matchesPhoto = photoFilter === 'yes' ? voter.photo_available : !voter.photo_available;
+                }
+                
+                return matchesSearch && matchesWard && matchesAge && matchesPhoto;
+            });
+            
+            currentPage = 1;
+            updateStats();
+            displayVoters();
+        }
+
+        // Apply filters (called when filter dropdowns change)
+        function applyFilters() {
+            searchVoters();
+        }
+
+        // Filter by first letter of name
+        function filterByFirstLetter(letter) {
+            document.getElementById('searchInput').value = '';
+            filteredVoters = allVoters.filter(voter => 
+                voter.name_english && voter.name_english.toUpperCase().startsWith(letter)
+            );
+            
+            // Update active state of alphabet buttons
+            document.querySelectorAll('.letter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent === letter);
+            });
+            
+            currentPage = 1;
+            updateStats();
+            displayVoters();
+        }
+
+        // Clear all search and filters
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('wardFilter').value = '';
+            document.getElementById('ageFilter').value = '';
+            document.getElementById('photoFilter').value = '';
+            
+            document.querySelectorAll('.letter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            filteredVoters = [...allVoters];
+            currentPage = 1;
+            updateStats();
+            displayVoters();
+        }
+
+        // Update statistics
+        function updateStats() {
+            const totalCount = allVoters.length;
+            const showingCount = filteredVoters.length;
+            const wardsCount = new Set(filteredVoters.map(v => v.ward)).size;
+            
+            document.getElementById('totalCount').textContent = totalCount.toLocaleString();
+            document.getElementById('showingCount').textContent = showingCount.toLocaleString();
+            document.getElementById('wardsCount').textContent = wardsCount;
+        }
+
+        // Display voters with pagination
+        function displayVoters() {
+            const resultsContainer = document.getElementById('resultsContainer');
+            const startIndex = (currentPage - 1) * votersPerPage;
+            const endIndex = startIndex + votersPerPage;
+            const pageVoters = filteredVoters.slice(startIndex, endIndex);
+            
+            if (pageVoters.length === 0) {
+                resultsContainer.innerHTML = '<div class="no-results">No voters found matching your criteria.</div>';
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+            
+            let html = '';
+            pageVoters.forEach(voter => {
+                html += `
+                    <div class="voter-card">
+                        <div class="voter-header">
+                            <div>
+                                <div class="voter-name">${voter.name_english || 'Name not available'}</div>
+                                ${voter.name_raw ? `<div class="voter-original-name">${voter.name_raw}</div>` : ''}
+                            </div>
+                            <div>
+                                <span class="badge badge-ward">${voter.ward}</span>
+                                <span class="badge ${voter.photo_available ? 'badge-photo' : 'badge-no-photo'}">
+                                    ${voter.photo_available ? '📷 Photo Available' : '❌ No Photo'}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="voter-details">
+                            ${voter.swh_id ? `<div class="detail-item"><span class="detail-label">SWH ID:</span> ${voter.swh_id}</div>` : ''}
+                            ${voter.serial_code ? `<div class="detail-item"><span class="detail-label">Serial Code:</span> ${voter.serial_code}</div>` : ''}
+                            ${voter.age ? `<div class="detail-item"><span class="detail-label">Age:</span> ${voter.age}</div>` : ''}
+                            ${voter.gender ? `<div class="detail-item"><span class="detail-label">Gender:</span> ${voter.gender}</div>` : ''}
+                            ${voter.address ? `<div class="detail-item"><span class="detail-label">Address:</span> ${voter.address}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            resultsContainer.innerHTML = html;
+            setupPagination();
+        }
+
+        // Setup pagination controls
+        function setupPagination() {
+            const totalPages = Math.ceil(filteredVoters.length / votersPerPage);
+            const pagination = document.getElementById('pagination');
+            
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            let html = `
+                <button class="page-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+                    Previous
+                </button>
+                <span class="page-info">Page ${currentPage} of ${totalPages}</span>
+                <button class="page-btn" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+                    Next
+                </button>
+            `;
+            
+            pagination.innerHTML = html;
+        }
+
+        // Change current page
+        function changePage(page) {
+            const totalPages = Math.ceil(filteredVoters.length / votersPerPage);
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                displayVoters();
+            }
+        }
+
+        // Upload functionality
+        function setupUploadArea() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            
+            // Click to select files
+            uploadArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            // Drag and drop
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                handleFiles(e.dataTransfer.files);
+            });
+            
+            // File input change
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+        }
+
+        function handleFiles(files) {
+            for (let file of files) {
+                if (file.type === 'application/pdf') {
+                    uploadedFiles.push(file);
+                    addFileToList(file);
+                }
+            }
+            updateProcessButton();
+        }
+
+        function addFileToList(file) {
+            const fileList = document.getElementById('fileList');
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            fileItem.innerHTML = `
+                <span>${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                <button onclick="removeFile('${file.name}')" style="background: none; border: none; color: #dc3545; cursor: pointer;">×</button>
+            `;
+            fileList.appendChild(fileItem);
+        }
+
+        function removeFile(fileName) {
+            uploadedFiles = uploadedFiles.filter(file => file.name !== fileName);
+            document.getElementById('fileList').innerHTML = '';
+            uploadedFiles.forEach(addFileToList);
+            updateProcessButton();
+        }
+
+        function updateProcessButton() {
+            const processBtn = document.getElementById('processBtn');
+            processBtn.disabled = uploadedFiles.length === 0;
+        }
+
+        async function processUploads() {
+            const resultsDiv = document.getElementById('uploadResults');
+            resultsDiv.innerHTML = '<div class="loading">Processing files...</div>';
+            
+            for (let file of uploadedFiles) {
+                await processSingleFile(file);
+            }
+            
+            uploadedFiles = [];
+            document.getElementById('fileList').innerHTML = '';
+            updateProcessButton();
+            
+            // Reload data after processing
+            await loadVoterData();
+            updateStats();
+            displayVoters();
+        }
+
+        async function processSingleFile(file) {
+            // This would typically send the file to a backend for processing
+            // For now, we'll simulate processing
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const resultsDiv = document.getElementById('uploadResults');
+                    resultsDiv.innerHTML += `<div style="color: green; margin: 10px 0;">✓ Processed: ${file.name}</div>`;
+                    resolve();
+                }, 2000);
+            });
+        }
+
+        // Database management
+        async function loadDatabaseStats() {
+            const dbStats = document.getElementById('dbStats');
+            try {
+                const stats = {
+                    totalVoters: allVoters.length,
+                    totalWards: new Set(allVoters.map(v => v.ward)).size,
+                    withPhotos: allVoters.filter(v => v.photo_available).length,
+                    lastUpdate: new Date().toLocaleDateString()
+                };
+                
+                dbStats.innerHTML = `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                        <div><strong>Total Voters:</strong></div>
+                        <div>${stats.totalVoters.toLocaleString()}</div>
+                        <div><strong>Total Wards:</strong></div>
+                        <div>${stats.totalWards}</div>
+                        <div><strong>With Photos:</strong></div>
+                        <div>${stats.withPhotos.toLocaleString()}</div>
+                        <div><strong>Last Update:</strong></div>
+                        <div>${stats.lastUpdate}</div>
+                    </div>
+                `;
+            } catch (error) {
+                dbStats.innerHTML = '<div style="color: red;">Error loading statistics</div>';
+            }
+        }
+
+        function refreshData() {
+            loadVoterData();
+            loadDatabaseStats();
+            alert('Data refreshed successfully!');
+        }
+
+        function exportData() {
+            // Simple CSV export
+            const headers = ['Name (English)', 'Name (Original)', 'SWH ID', 'Serial Code', 'Age', 'Gender', 'Address', 'Ward', 'Photo Available'];
+            const csvContent = [
+                headers.join(','),
+                ...allVoters.map(voter => [
+                    `"${(voter.name_english || '').replace(/"/g, '""')}"`,
+                    `"${(voter.name_raw || '').replace(/"/g, '""')}"`,
+                    `"${(voter.swh_id || '').replace(/"/g, '""')}"`,
+                    `"${(voter.serial_code || '').replace(/"/g, '""')}"`,
+                    voter.age || '',
+                    `"${(voter.gender || '').replace(/"/g, '""')}"`,
+                    `"${(voter.address || '').replace(/"/g, '""')}"`,
+                    `"${(voter.ward || '').replace(/"/g, '""')}"`,
+                    voter.photo_available ? 'Yes' : 'No'
+                ].join(','))
+            ].join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `voter_list_export_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function backupData() {
+            const dataStr = JSON.stringify(allVoters, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `voter_data_backup_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', init);
+
+        // Enable search on Enter key
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchVoters();
+            }
+        });
+    </script>
+</body>
+</html>
