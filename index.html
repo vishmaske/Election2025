@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voter Data Search System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3a0ca3;
+            --success: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --danger: #e63946;
+            --warning: #fca311;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.1)"/></svg>');
+            background-size: cover;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            position: relative;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+            gap: 20px;
+        }
+        
+        .upload-section {
+            flex: 1;
+            min-width: 350px;
+            padding: 25px;
+            background: var(--light);
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .search-section {
+            flex: 2;
+            min-width: 600px;
+            padding: 25px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--secondary);
+            border-bottom: 2px solid var(--success);
+            padding-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title i {
+            font-size: 1.8rem;
+        }
+        
+        .upload-area {
+            border: 2px dashed var(--primary);
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            background-color: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            background-color: #e8f4fc;
+            border-color: var(--secondary);
+            transform: translateY(-5px);
+        }
+        
+        .upload-icon {
+            font-size: 60px;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .upload-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .upload-btn:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .file-types {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        
+        .file-type {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .uploaded-files {
+            margin-top: 25px;
+        }
+        
+        .file-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s ease;
+        }
+        
+        .file-item:hover {
+            transform: translateX(5px);
+        }
+        
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .file-icon {
+            font-size: 24px;
+        }
+        
+        .pdf-icon {
+            color: var(--danger);
+        }
+        
+        .excel-icon {
+            color: var(--success);
+        }
+        
+        .file-details h4 {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .file-details p {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        .file-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .remove-btn {
+            background: var(--danger);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .remove-btn:hover {
+            background: #c1121f;
+            transform: scale(1.1);
+        }
+        
+        .search-box {
+            display: flex;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: none;
+            background: white;
+            font-size: 1rem;
+            outline: none;
+        }
+        
+        .search-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .search-btn:hover {
+            background: var(--secondary);
+        }
+        
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .results-container {
+            border: 1px solid #eee;
+            border-radius: 10px;
+            max-height: 500px;
+            overflow-y: auto;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .result-item {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s ease;
+        }
+        
+        .result-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .result-title {
+            font-weight: 600;
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .result-badge {
+            background: var(--success);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        
+        .result-content {
+            color: #555;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        .highlight {
+            background-color: #fffacd;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+        
+        .voter-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .voter-table th {
+            background: var(--primary);
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        .voter-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .voter-table tr:hover {
+            background: #f1f8ff;
+        }
+        
+        .no-results {
+            padding: 40px;
+            text-align: center;
+            color: var(--gray);
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: var(--primary);
+        }
+        
+        .loading-spinner {
+            border: 4px solid rgba(67, 97, 238, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--gray);
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
+            background: var(--light);
+        }
+        
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .upload-section, .search-section {
+                min-width: 100%;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .voter-table {
+                font-size: 0.8rem;
+            }
+            
+            .voter-table th, .voter-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Voter Data Search System</h1>
+            <p class="subtitle">Upload PDF and Excel files with voter data, then search by name or voter card number</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="upload-section">
+                <h2 class="section-title">
+                    <i>📁</i> Upload Files
+                </h2>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📤</div>
+                    <p>Drag & drop files here or click to browse</p>
+                    <p style="font-size: 0.9rem; margin-top: 10px; color: var(--gray);">Supports PDF and Excel files with voter data</p>
+                    <input type="file" id="fileInput" class="file-input" accept=".pdf,.xlsx,.xls,.csv" multiple>
+                    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                        <i>➕</i> Select Files
+                    </button>
+                </div>
+                
+                <div class="file-types">
+                    <div class="file-type">
+                        <i>📄</i> PDF Files
+                    </div>
+                    <div class="file-type">
+                        <i>📊</i> Excel Files
+                    </div>
+                </div>
+                
+                <div class="uploaded-files">
+                    <h3 class="section-title">
+                        <i>📂</i> Uploaded Files
+                    </h3>
+                    <div id="fileList"></div>
+                </div>
+            </div>
+            
+            <div class="search-section">
+                <h2 class="section-title">
+                    <i>🔍</i> Search Voter Data
+                </h2>
+                <div class="search-box">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Enter voter name or card number to search...">
+                    <button class="search-btn" id="searchBtn">
+                        <i>🔍</i> Search
+                    </button>
+                </div>
+                
+                <div class="filters">
+                    <div class="filter-btn active" data-filter="all">All Files</div>
+                    <div class="filter-btn" data-filter="pdf">PDF Only</div>
+                    <div class="filter-btn" data-filter="excel">Excel Only</div>
+                </div>
+                
+                <div class="results-container" id="resultsContainer">
+                    <div class="no-results" id="noResults">
+                        <p>No search results yet. Upload PDF or Excel files with voter data and search for names or card numbers.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Voter Data Search System &copy; 2023 | All files are processed locally in your browser</p>
+        </footer>
+    </div>
+
+    <script>
+        // Set up PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+        
+        // Store extracted data from files
+        let fileData = [];
+        let currentFilter = 'all';
+        
+        // DOM elements
+        const fileInput = document.getElementById('fileInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileList = document.getElementById('fileList');
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const noResults = document.getElementById('noResults');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        
+        // Event listeners
+        fileInput.addEventListener('change', handleFileUpload);
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.backgroundColor = '#e8f4fc';
+            uploadArea.style.transform = 'translateY(-5px)';
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.backgroundColor = 'white';
+            uploadArea.style.transform = 'translateY(0)';
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.backgroundColor = 'white';
+            uploadArea.style.transform = 'translateY(0)';
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileUpload();
+            }
+        });
+        searchBtn.addEventListener('click', performSearch);
+        searchInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+        
+        // Filter buttons
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.getAttribute('data-filter');
+                performSearch();
+            });
+        });
+        
+        // Handle file upload
+        function handleFileUpload() {
+            const files = fileInput.files;
+            if (files.length === 0) return;
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const fileType = getFileType(file);
+                
+                if (!['pdf', 'excel'].includes(fileType)) {
+                    alert('Please upload only PDF or Excel files.');
+                    continue;
+                }
+                
+                // Add file to the list
+                addFileToList(file, fileType);
+                
+                // Extract data from file
+                if (fileType === 'pdf') {
+                    extractTextFromPDF(file);
+                } else {
+                    extractDataFromExcel(file);
+                }
+            }
+            
+            // Reset file input
+            fileInput.value = '';
+        }
+        
+        // Get file type
+        function getFileType(file) {
+            if (file.type === 'application/pdf') return 'pdf';
+            if (file.name.endsWith('.csv') || 
+                file.type.includes('spreadsheet') || 
+                file.type.includes('excel')) return 'excel';
+            return 'unknown';
+        }
+        
+        // Add file to the uploaded files list
+        function addFileToList(file, fileType) {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            fileItem.setAttribute('data-type', fileType);
+            
+            const fileInfo = document.createElement('div');
+            fileInfo.className = 'file-info';
+            
+            const fileIcon = document.createElement('div');
+            fileIcon.className = `file-icon ${fileType}-icon`;
+            fileIcon.innerHTML = fileType === 'pdf' ? '📄' : '📊';
+            
+            const fileDetails = document.createElement('div');
+            fileDetails.className = 'file-details';
+            
+            const fileName = document.createElement('h4');
+            fileName.textContent = file.name;
+            
+            const fileSize = document.createElement('p');
+            fileSize.textContent = `${formatFileSize(file.size)} • ${fileType.toUpperCase()}`;
+            
+            fileDetails.appendChild(fileName);
+            fileDetails.appendChild(fileSize);
+            
+            const fileActions = document.createElement('div');
+            fileActions.className = 'file-actions';
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-btn';
+            removeBtn.innerHTML = '×';
+            removeBtn.onclick = () => {
+                fileItem.remove();
+                // Remove from fileData array
+                const index = fileData.findIndex(f => f.name === file.name);
+                if (index !== -1) {
+                    fileData.splice(index, 1);
+                }
+            };
+            
+            fileActions.appendChild(removeBtn);
+            
+            fileInfo.appendChild(fileIcon);
+            fileInfo.appendChild(fileDetails);
+            
+            fileItem.appendChild(fileInfo);
+            fileItem.appendChild(fileActions);
+            
+            fileList.appendChild(fileItem);
+        }
+        
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Extract text from PDF
+        async function extractTextFromPDF(file) {
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+                
+                let fullText = '';
+                
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    fullText += pageText + '\n';
+                }
+                
+                // Store extracted text with file info
+                fileData.push({
+                    name: file.name,
+                    type: 'pdf',
+                    text: fullText,
+                    pages: pdf.numPages
+                });
+                
+                console.log(`Extracted text from ${file.name}: ${pdf.numPages} pages`);
+            } catch (error) {
+                console.error(`Error extracting PDF: ${error}`);
+                alert(`Error processing PDF file: ${file.name}`);
+            }
+        }
+        
+        // Extract data from Excel
+        async function extractDataFromExcel(file) {
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                
+                let excelData = {
+                    name: file.name,
+                    type: 'excel',
+                    sheets: []
+                };
+                
+                workbook.SheetNames.forEach(sheetName => {
+                    const worksheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    // Process voter data
+                    const voterData = processVoterData(jsonData);
+                    
+                    excelData.sheets.push({
+                        name: sheetName,
+                        data: jsonData,
+                        voterData: voterData
+                    });
+                });
+                
+                fileData.push(excelData);
+                console.log(`Extracted data from ${file.name}: ${excelData.sheets.length} sheets`);
+            } catch (error) {
+                console.error(`Error extracting Excel: ${error}`);
+                alert(`Error processing Excel file: ${file.name}`);
+            }
+        }
+        
+        // Process voter data from Excel
+        function processVoterData(data) {
+            const voterData = [];
+            
+            // Find header row
+            let headerRowIndex = -1;
+            let voterNameIndex = -1;
+            let voterCardNoIndex = -1;
+            let serialNoIndex = -1;
+            
+            for (let i = 0; i < Math.min(5, data.length); i++) {
+                const row = data[i];
+                if (Array.isArray(row)) {
+                    for (let j = 0; j < row.length; j++) {
+                        const cell = row[j] ? row[j].toString().toLowerCase() : '';
+                        if (cell.includes('voter') && cell.includes('name')) voterNameIndex = j;
+                        if (cell.includes('voter') && cell.includes('card')) voterCardNoIndex = j;
+                        if (cell.includes('serial') || cell.includes('sr')) serialNoIndex = j;
+                    }
+                    
+                    // If we found at least one voter-related column, assume this is the header
+                    if (voterNameIndex !== -1 || voterCardNoIndex !== -1) {
+                        headerRowIndex = i;
+                        break;
+                    }
+                }
+            }
+            
+            // Extract voter records
+            if (headerRowIndex !== -1) {
+                for (let i = headerRowIndex + 1; i < data.length; i++) {
+                    const row = data[i];
+                    if (Array.isArray(row)) {
+                        const voterName = voterNameIndex !== -1 && row[voterNameIndex] ? row[voterNameIndex].toString().trim() : '';
+                        const voterCardNo = voterCardNoIndex !== -1 && row[voterCardNoIndex] ? row[voterCardNoIndex].toString().trim() : '';
+                        const serialNo = serialNoIndex !== -1 && row[serialNoIndex] ? row[serialNoIndex].toString().trim() : '';
+                        
+                        // Only add if we have at least a name or card number
+                        if (voterName || voterCardNo) {
+                            voterData.push({
+                                serialNo: serialNo,
+                                voterName: voterName,
+                                voterCardNo: voterCardNo,
+                                rowIndex: i
+                            });
+                        }
+                    }
+                }
+            }
+            
+            return voterData;
+        }
+        
+        // Perform search
+        function performSearch() {
+            const searchTerm = searchInput.value.trim().toLowerCase();
+            
+            if (searchTerm === '') {
+                alert('Please enter a search term.');
+                return;
+            }
+            
+            if (fileData.length === 0) {
+                alert('Please upload PDF or Excel files first.');
+                return;
+            }
+            
+            // Clear previous results
+            resultsContainer.innerHTML = '';
+            
+            let hasResults = false;
+            
+            // Search through all files based on filter
+            fileData.forEach(file => {
+                if (currentFilter !== 'all' && file.type !== currentFilter) {
+                    return;
+                }
+                
+                if (file.type === 'pdf') {
+                    const searchRegex = new RegExp(`\\b${searchTerm}\\b`, 'gi');
+                    const matches = file.text.match(searchRegex);
+                    
+                    if (matches) {
+                        hasResults = true;
+                        displayPDFResult(file, searchTerm, matches.length);
+                    }
+                } else if (file.type === 'excel') {
+                    let totalMatches = 0;
+                    let matchedSheets = [];
+                    
+                    file.sheets.forEach(sheet => {
+                        let sheetMatches = 0;
+                        let matchedVoters = [];
+                        
+                        if (sheet.voterData && sheet.voterData.length > 0) {
+                            sheet.voterData.forEach(voter => {
+                                if ((voter.voterName && voter.voterName.toLowerCase().includes(searchTerm)) ||
+                                    (voter.voterCardNo && voter.voterCardNo.toLowerCase().includes(searchTerm)) ||
+                                    (voter.serialNo && voter.serialNo.toLowerCase().includes(searchTerm))) {
+                                    sheetMatches++;
+                                    matchedVoters.push(voter);
+                                }
+                            });
+                        }
+                        
+                        if (sheetMatches > 0) {
+                            totalMatches += sheetMatches;
+                            matchedSheets.push({
+                                name: sheet.name,
+                                matches: sheetMatches,
+                                voters: matchedVoters
+                            });
+                        }
+                    });
+                    
+                    if (totalMatches > 0) {
+                        hasResults = true;
+                        displayExcelResult(file, searchTerm, totalMatches, matchedSheets);
+                    }
+                }
+            });
+            
+            if (!hasResults) {
+                resultsContainer.innerHTML = `
+                    <div class="no-results">
+                        <p>No voter data found for "${searchTerm}" in any uploaded files.</p>
+                        <p style="margin-top: 10px;">Try a different search term or check your filters.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Display PDF search result
+        function displayPDFResult(file, searchTerm, matchCount) {
+            const resultItem = document.createElement('div');
+            resultItem.className = 'result-item';
+            
+            const resultHeader = document.createElement('div');
+            resultHeader.className = 'result-header';
+            
+            const resultTitle = document.createElement('div');
+            resultTitle.className = 'result-title';
+            resultTitle.innerHTML = `<i>📄</i> ${file.name}`;
+            
+            const resultBadge = document.createElement('div');
+            resultBadge.className = 'result-badge';
+            resultBadge.textContent = `${matchCount} matches`;
+            
+            resultHeader.appendChild(resultTitle);
+            resultHeader.appendChild(resultBadge);
+            
+            // Extract context around matches
+            const searchRegex = new RegExp(`\\b${searchTerm}\\b`, 'gi');
+            const textSegments = file.text.split(searchRegex);
+            let highlightedText = '';
+            
+            for (let i = 0; i < textSegments.length; i++) {
+                highlightedText += textSegments[i];
+                if (i < textSegments.length - 1) {
+                    highlightedText += `<span class="highlight">${searchTerm}</span>`;
+                }
+            }
+            
+            const resultContent = document.createElement('div');
+            resultContent.className = 'result-content';
+            resultContent.innerHTML = highlightedText.substring(0, 500) + '...';
+            
+            resultItem.appendChild(resultHeader);
+            resultItem.appendChild(resultContent);
+            resultsContainer.appendChild(resultItem);
+        }
+        
+        // Display Excel search result
+        function displayExcelResult(file, searchTerm, totalMatches, matchedSheets) {
+            const resultItem = document.createElement('div');
+            resultItem.className = 'result-item';
+            
+            const resultHeader = document.createElement('div');
+            resultHeader.className = 'result-header';
+            
+            const resultTitle = document.createElement('div');
+            resultTitle.className = 'result-title';
+            resultTitle.innerHTML = `<i>📊</i> ${file.name}`;
+            
+            const resultBadge = document.createElement('div');
+            resultBadge.className = 'result-badge';
+            resultBadge.textContent = `${totalMatches} voters found`;
+            
+            resultHeader.appendChild(resultTitle);
+            resultHeader.appendChild(resultBadge);
+            
+            const resultContent = document.createElement('div');
+            resultContent.className = 'result-content';
+            
+            matchedSheets.forEach(sheet => {
+                const sheetTitle = document.createElement('p');
+                sheetTitle.innerHTML = `<strong>Sheet "${sheet.name}":</strong> ${sheet.matches} voters`;
+                resultContent.appendChild(sheetTitle);
+                
+                // Create a table for voter data
+                if (sheet.voters.length > 0) {
+                    const table = document.createElement('table');
+                    table.className = 'voter-table';
+                    
+                    // Create header
+                    const headerRow = document.createElement('tr');
+                    const headerCell1 = document.createElement('th');
+                    headerCell1.textContent = 'Serial No';
+                    const headerCell2 = document.createElement('th');
+                    headerCell2.textContent = 'Voter Name';
+                    const headerCell3 = document.createElement('th');
+                    headerCell3.textContent = 'Voter Card No';
+                    
+                    headerRow.appendChild(headerCell1);
+                    headerRow.appendChild(headerCell2);
+                    headerRow.appendChild(headerCell3);
+                    table.appendChild(headerRow);
+                    
+                    // Add voters
+                    sheet.voters.forEach(voter => {
+                        const tableRow = document.createElement('tr');
+                        
+                        const cell1 = document.createElement('td');
+                        cell1.textContent = voter.serialNo || '-';
+                        
+                        const cell2 = document.createElement('td');
+                        const highlightedName = voter.voterName ? 
+                            voter.voterName.replace(
+                                new RegExp(searchTerm, 'gi'), 
+                                match => `<span class="highlight">${match}</span>`
+                            ) : '-';
+                        cell2.innerHTML = highlightedName;
+                        
+                        const cell3 = document.createElement('td');
+                        const highlightedCardNo = voter.voterCardNo ? 
+                            voter.voterCardNo.replace(
+                                new RegExp(searchTerm, 'gi'), 
+                                match => `<span class="highlight">${match}</span>`
+                            ) : '-';
+                        cell3.innerHTML = highlightedCardNo;
+                        
+                        tableRow.appendChild(cell1);
+                        tableRow.appendChild(cell2);
+                        tableRow.appendChild(cell3);
+                        table.appendChild(tableRow);
+                    });
+                    
+                    resultContent.appendChild(table);
+                }
+            });
+            
+            resultItem.appendChild(resultHeader);
+            resultItem.appendChild(resultContent);
+            resultsContainer.appendChild(resultItem);
+        }
+    </script>
+</body>
+</html>
